@@ -27,34 +27,33 @@ def main():
     screen.fill(p.Color("black"))
     gs = ChessEngine.GameState()
     loadImages()
-    select = False
-    toMoveX = 0
-    toMoveY = 0
-    destX = 0
-    destY = 0
     running = True
+    sqSelect = {}
+    playerClicks = []
     while(running):
         for(e) in p.event.get():
             if e.type == p.QUIT:
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
-                if select is False:
                     mouse_pos = p.mouse.get_pos()
                     #Find  x and y coords of square that was clicked on then transform them into their correspoding indicies on the board matrix
-                    toMoveX = int(mouse_pos[0]/(DIMENSION**2))
-                    toMoveY = int(mouse_pos[1]/(DIMENSION**2))
-                    select = True
-                    print(toMoveX, " ", toMoveY)
-                elif select:
-                    mouse_pos = p.mouse.get_pos()
-                    # Find  x and y coords of square that was clicked on then transform them into their correspoding indicies on the board matrix
-                    destX = int(mouse_pos[0] / (DIMENSION ** 2))
-                    destY = int(mouse_pos[1] / (DIMENSION ** 2))
-                    print(destY, " " , destX, "Dest")
-                    select = False
-                    piece = gs.board[toMoveY][toMoveX]
-                    gs.board[toMoveY][toMoveX] = '--'
-                    gs.board[destY][destX] = piece
+                    col = mouse_pos[0]//SQUARE_SIZE
+                    row = mouse_pos[1]//SQUARE_SIZE
+
+                    if sqSelect == (row, col): #undo function
+                        sqSelect = {}
+                        playerClicks = []
+                    else:
+                        sqSelect = (row, col)
+                        playerClicks.append(sqSelect)
+                    if len(playerClicks) == 2:
+                        source = playerClicks[0]
+                        dest = playerClicks[1]
+                        gs.board[dest[0]][dest[1]] = gs.board[source[0]][source[1]]
+                        gs.board[source[0]][source[1]] = "--"
+                        sqSelect = {}
+                        playerClicks = []
+                        gs.whiteToMove = not gs.whiteToMove
 
 
 
