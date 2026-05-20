@@ -28,7 +28,7 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()
     running = True
-    sqSelect = {}
+    sqSelect = ()
     playerClicks = []
     while(running):
         for(e) in p.event.get():
@@ -41,19 +41,26 @@ def main():
                     row = mouse_pos[1]//SQUARE_SIZE
 
                     if sqSelect == (row, col): #undo function
-                        sqSelect = {}
+                        sqSelect = ()
                         playerClicks = []
+
                     else:
                         sqSelect = (row, col)
                         playerClicks.append(sqSelect)
-                    if len(playerClicks) == 2:
-                        source = playerClicks[0]
-                        dest = playerClicks[1]
-                        gs.board[dest[0]][dest[1]] = gs.board[source[0]][source[1]]
-                        gs.board[source[0]][source[1]] = "--"
-                        sqSelect = {}
+                        if(len(playerClicks) == 1):
+                            if gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]] == "--":
+                                sqSelect = ()
+                                playerClicks = []
+                            else:
+                                print(gs.getAllMoves(playerClicks[0]))
+
+                    if len(playerClicks) == 2 and gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]] != "--":
+                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                        print(move.getChessNotation())
+                        gs.makeMove(move)
+                        sqSelect = ()
                         playerClicks = []
-                        gs.whiteToMove = not gs.whiteToMove
+
 
 
 
@@ -80,7 +87,7 @@ def drawGameState(screen, gs):
 Draws board before pieces populate. Top left square always light.
 '''
 def drawBoard(screen):
-    colors = [p.Color("cornsilk2"), p.Color("midnightblue")]
+    colors = [p.Color("pink"), p.Color("midnightblue")]
     for i in range(DIMENSION):
         for j in range(DIMENSION):
             color = colors[((i+j) % 2)]
