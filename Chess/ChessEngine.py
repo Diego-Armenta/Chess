@@ -19,28 +19,58 @@ class GameState():
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
 
+    def traceSpots(self, pos, rowChange, colChange, team, moves):
+        pos = (pos[0] + rowChange, pos[1] + colChange)
+        if (pos[0] >= 0 and pos[0] <= 7) and (pos[1] >= 0 and pos[1] <= 7):
+            if team in self.board[pos[0]][pos[1]]:
+                return moves
+
+            moves.append((pos[0], pos[1]))
+
+            if self.board[pos[0]][pos[1]] == "--":
+                self.traceSpots(pos, rowChange, colChange, team, moves)
+
+
+
+
+
     def getAllMoves(self, start):
         piece = self.board[start[0]][start[1]]
         moves = []
         match piece:
                 case 'wP':
-                    if(start[0] == 6):
-                        moves.append((4, start[1]))
-                    moves.append((start[0]-1, start[1]))
+                    blocked = False
+                    if self.checkIfOccupied((start[0]-1, start[1]), piece) is False and blocked is False:
+                        moves.append((start[0]-1, start[1]))
+                    else:
+                        blocked = True
+                    if(start[0] == 6) and blocked is False:
+                        if self.checkIfOccupied((4, start[1]), piece) is False:
+                            moves.append((4, start[1]))
+                        else:
+                            blocked = True
+
                     return moves
 
                 case 'bP':
+                    blocked = False
+                    if self.checkIfOccupied((start[0] + 1, start[1]), piece) is False and blocked is False:
+                        moves.append((start[0] + 1, start[1]))
+                    else:
+                        blocked = True
                     if (start[0] == 1):
-                        moves.append((3, start[1]))
-                    moves.append((start[0] + 1, start[1]))
+                        if self.checkIfOccupied((3, start[1]), piece) is False and blocked is False:
+                            moves.append((3, start[1]))
+                        else:
+                            blocked = True
                     return moves
 
                 case _ if 'R' in piece:
-                    for i in range(8):
-                        if i is not start[0]:
-                            moves.append((i, start[1]))
-                        if i is not start[1]:
-                            moves.append((start[0], i))
+                    team = piece[0]
+                    self.traceSpots(start, 0, 1, team, moves)
+                    self.traceSpots(start, 1, 0, team, moves)
+                    self.traceSpots(start, 0, -1, team, moves)
+                    self.traceSpots(start, -1, 0, team, moves)
                     return moves
 
                 case _ if 'N' in piece:
@@ -50,29 +80,28 @@ class GameState():
                             differenceY = start[1] - j
                             if (abs(differenceX) == 2 and abs(differenceY) == 1 or
                                 abs(differenceX) == 1 and abs(differenceY) == 2):
-                                moves.append((i,j))
+                                if self.checkIfOccupied((i,j), piece) is False:
+                                    moves.append((i,j))
                     return moves
 
                 case _ if 'B' in piece:
-                    for i in range(8):
-                        for j in range(8):
-                            differenceX = start[0] - i
-                            differenceY = start[1] -j
-                            if abs(differenceX) == abs(differenceY) and differenceX != 0:
-                                moves.append((i,j))
+                    team = piece[0]
+                    self.traceSpots(start, 1, 1, team, moves)
+                    self.traceSpots(start, 1, -1, team, moves)
+                    self.traceSpots(start, -1, 1, team, moves)
+                    self.traceSpots(start, -1, -1, team, moves)
                     return moves
 
                 case _ if 'Q' in piece:
-                    for i in range(8):
-                        if i is not start[0]:
-                            moves.append((i, start[1]))
-                        if i is not start[1]:
-                            moves.append((start[0], i))
-                        for j in range(8):
-                                differenceX = start[0] - i
-                                differenceY = start[1] - j
-                                if abs(differenceX) == abs(differenceY) and differenceX != 0:
-                                    moves.append((i, j))
+                    team = piece[0]
+                    self.traceSpots(start, 0, 1, team, moves)
+                    self.traceSpots(start, 1, 0, team, moves)
+                    self.traceSpots(start, 0, -1, team, moves)
+                    self.traceSpots(start, -1, 0, team, moves)
+                    self.traceSpots(start, 1, 1, team, moves)
+                    self.traceSpots(start, 1, -1, team, moves)
+                    self.traceSpots(start, -1, 1, team, moves)
+                    self.traceSpots(start, -1, -1, team, moves)
                     return moves
 
                 case _ if 'K' in piece:
@@ -82,8 +111,18 @@ class GameState():
                             differenceY = start[1] - j
                             if abs(differenceX) <= 1 and abs(differenceY) <= 1:
                                 if differenceX !=0 or differenceY != 0:
-                                    moves.append((i,j))
+                                    if self.checkIfOccupied((i, j), piece) is False:
+                                        moves.append((i,j))
                     return moves
+
+    def checkIfOccupied(self, newSquare, piece):
+        newSquarePiece = self.board[newSquare[0]][newSquare[1]]
+        if newSquarePiece == '--':
+            return False
+        elif 'w' in piece and 'w' in newSquarePiece:
+            return True
+        elif 'b' in piece and 'b' in newSquarePiece:
+            return True
 
 class Move():
     ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4,

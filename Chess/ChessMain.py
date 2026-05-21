@@ -8,7 +8,9 @@ WIDTH = HEIGHT = 512
 DIMENSION = 8
 SQUARE_SIZE = WIDTH // DIMENSION
 MAX_FPS = 15
+playableSquares = []
 IMAGES = {}
+DOT = {}
 
 """
 Initialize global dictionary of images
@@ -16,6 +18,7 @@ Initialize global dictionary of images
 
 def loadImages():
     pieces = ['wR', 'wN', 'wB', 'wQ', 'wK', 'wP', 'bP', 'bR', 'bN', 'bB', 'bQ', 'bK', 'bP']
+    DOT[1] = p.transform.scale(p.image.load("images/dot.png"), (SQUARE_SIZE, SQUARE_SIZE)) #load in dot
     for(piece) in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece +".png"), (SQUARE_SIZE, SQUARE_SIZE))
     #We can access images by IMAGES['wp']
@@ -24,7 +27,7 @@ def main():
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
-    screen.fill(p.Color("black"))
+    screen.fill(p.Color("yellow"))
     gs = ChessEngine.GameState()
     loadImages()
     running = True
@@ -39,28 +42,50 @@ def main():
                     #Find  x and y coords of square that was clicked on then transform them into their correspoding indicies on the board matrix
                     col = mouse_pos[0]//SQUARE_SIZE
                     row = mouse_pos[1]//SQUARE_SIZE
+                    loop = True
+                    skip = False
+                    while(loop is True):
+                        loop = False
+                        if sqSelect == (row, col) and skip is False: #undo function
+                            sqSelect = ()
+                            playerClicks = []
+                            skip = False
 
-                    if sqSelect == (row, col): #undo function
-                        sqSelect = ()
-                        playerClicks = []
 
-                    else:
-                        sqSelect = (row, col)
-                        playerClicks.append(sqSelect)
-                        if(len(playerClicks) == 1):
-                            if gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]] == "--":
+                        else:
+                            sqSelect = (row, col)
+                            playerClicks.append(sqSelect)
+                            if(len(playerClicks) == 1):
+                                piece = gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]]
+                                if ( piece == "--"
+                                    or (piece[0] == 'w' and gs.whiteToMove is False)
+                                    or (piece[0] == 'b' and gs.whiteToMove is True)
+                                    ):
+                                    sqSelect = ()
+                                    playerClicks = []
+                                else:
+                                    playableSquares = gs.getAllMoves(playerClicks[0])
+                                    print(playableSquares)
+
+                        if len(playerClicks) == 2:
+                            if playerClicks[1] in playableSquares:
+                                move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                                print(move.getChessNotation())
+                                gs.makeMove(move)
                                 sqSelect = ()
                                 playerClicks = []
-                            else:
-                                print(gs.getAllMoves(playerClicks[0]))
-
-                    if len(playerClicks) == 2 and gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]] != "--":
-                        move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                        print(move.getChessNotation())
-                        gs.makeMove(move)
-                        sqSelect = ()
-                        playerClicks = []
-
+                            elif (
+                                    (gs.board[(playerClicks[1])[0]][(playerClicks[1])[1]])[0]
+                                == (gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]])[0]
+                            ):
+                                """
+                                Checks if source piece and selected piece are same team. 
+                                If so it will automatically switch source piece to the second click instead of acting as undo
+                                """
+                                print("hi")
+                                loop = True
+                                skip = True
+                                playerClicks = []
 
 
 
@@ -80,6 +105,8 @@ Responsible for populating graphics of the board
 def drawGameState(screen, gs):
     drawBoard(screen)
     drawPieces(screen, gs.board)
+    #  drawViableMoves(screen, moves)
+
 
 
 
@@ -102,6 +129,11 @@ def drawPieces(screen, board):
             piece = board[i][j]
             if piece != "--":
                 screen.blit(IMAGES[piece],p.Rect(j*SQUARE_SIZE, i*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
+def drawViableMoves(screen, moves):
+    for i in moves:
+        screen.blit(DOT[1], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
 
 
     
