@@ -117,12 +117,12 @@ class GameState():
 
     def checkIfOccupied(self, newSquare, piece):
         newSquarePiece = self.board[newSquare[0]][newSquare[1]]
-        if newSquarePiece == '--':
-            return False
-        elif 'w' in piece and 'w' in newSquarePiece:
+        if 'w' in piece and 'w' in newSquarePiece:
             return True
         elif 'b' in piece and 'b' in newSquarePiece:
             return True
+        else:
+            return False
 
 class Move():
     ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4,
