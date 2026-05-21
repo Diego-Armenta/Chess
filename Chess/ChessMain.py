@@ -82,7 +82,6 @@ def main():
                                 Checks if source piece and selected piece are same team. 
                                 If so it will automatically switch source piece to the second click instead of acting as undo
                                 """
-                                print("hi")
                                 loop = True
                                 skip = True
                                 playerClicks = []

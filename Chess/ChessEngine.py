@@ -23,12 +23,68 @@ class GameState():
         pos = (pos[0] + rowChange, pos[1] + colChange)
         if (pos[0] >= 0 and pos[0] <= 7) and (pos[1] >= 0 and pos[1] <= 7):
             if team in self.board[pos[0]][pos[1]]:
-                return moves
+                return
 
             moves.append((pos[0], pos[1]))
 
             if self.board[pos[0]][pos[1]] == "--":
                 self.traceSpots(pos, rowChange, colChange, team, moves)
+
+    def pawnMoves(self, pos, dir, moves, piece):
+
+        posInFront = (pos[0] + dir, pos[1])
+        posLeftDiag = (posInFront[0], posInFront[1] - 1)
+        leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
+        posRightDiag = (posInFront[0], posInFront[1] + 1)
+        rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
+
+        if (posLeftDiag[0] >= 0 and posLeftDiag[0] <= 7) and (posLeftDiag[1] >= 0 and posLeftDiag[1] <= 7):
+            if self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece) :
+                moves.append(posLeftDiag)
+
+        if (posRightDiag[0] >= 0 and posRightDiag[0] <= 7) and (posRightDiag[1] >= 0 and posRightDiag[1] <= 7):
+            if self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece) :
+                moves.append(posRightDiag)
+
+
+        if (posInFront[0] >= 0 and posInFront[0] <= 7) and (posInFront[1] >= 0 and posInFront[1] <= 7):
+            if self.checkIfOccupied(posInFront) is True:
+                return
+
+            moves.append(posInFront)
+
+            doubleJump = (posInFront[0] + dir, posInFront[1])
+            if self.hasBeenMoved(pos,'P') is False:
+                if self.checkIfOccupied(doubleJump) is False:
+                    moves.append(doubleJump)
+            return
+
+
+
+
+    def hasBeenMoved(self, pos, piece):
+        """
+        Checks if piece has been moved but needs different implementation for pawns, vs Kings and Rooks, as they can return to their OG square
+        """
+        if 'P' in piece:
+            startBoard = board=[
+                ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+            ]
+            if startBoard[pos[0]][pos[1]] == self.board[pos[0]][pos[1]]:
+                return False
+            else:
+                return True
+
+
+
+
 
 
 
@@ -39,30 +95,11 @@ class GameState():
         moves = []
         match piece:
                 case 'wP':
-                    blocked = False
-                    if self.checkIfOccupied((start[0]-1, start[1]), piece) is False and blocked is False:
-                        moves.append((start[0]-1, start[1]))
-                    else:
-                        blocked = True
-                    if(start[0] == 6) and blocked is False:
-                        if self.checkIfOccupied((4, start[1]), piece) is False:
-                            moves.append((4, start[1]))
-                        else:
-                            blocked = True
-
+                    self.pawnMoves(start, -1, moves, 'wP')
                     return moves
 
                 case 'bP':
-                    blocked = False
-                    if self.checkIfOccupied((start[0] + 1, start[1]), piece) is False and blocked is False:
-                        moves.append((start[0] + 1, start[1]))
-                    else:
-                        blocked = True
-                    if (start[0] == 1):
-                        if self.checkIfOccupied((3, start[1]), piece) is False and blocked is False:
-                            moves.append((3, start[1]))
-                        else:
-                            blocked = True
+                    self.pawnMoves(start, 1, moves, 'bP')
                     return moves
 
                 case _ if 'R' in piece:
@@ -80,7 +117,7 @@ class GameState():
                             differenceY = start[1] - j
                             if (abs(differenceX) == 2 and abs(differenceY) == 1 or
                                 abs(differenceX) == 1 and abs(differenceY) == 2):
-                                if self.checkIfOccupied((i,j), piece) is False:
+                                if self.checkIfOccupied((i,j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
                                     moves.append((i,j))
                     return moves
 
@@ -111,15 +148,19 @@ class GameState():
                             differenceY = start[1] - j
                             if abs(differenceX) <= 1 and abs(differenceY) <= 1:
                                 if differenceX !=0 or differenceY != 0:
-                                    if self.checkIfOccupied((i, j), piece) is False:
+                                    if self.checkIfOccupied((i, j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
                                         moves.append((i,j))
                     return moves
 
-    def checkIfOccupied(self, newSquare, piece):
+    def checkIfOccupied(self, newSquare):
         newSquarePiece = self.board[newSquare[0]][newSquare[1]]
-        if 'w' in piece and 'w' in newSquarePiece:
+        if newSquarePiece != "--":
             return True
-        elif 'b' in piece and 'b' in newSquarePiece:
+        else:
+            return False
+
+    def checkIfEnemy(self, piece, otherPiece):
+        if piece[0] != otherPiece[0]:
             return True
         else:
             return False
