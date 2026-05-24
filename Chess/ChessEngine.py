@@ -1,3 +1,4 @@
+import copy
 class GameState():
     def __init__(self):
         self.board=[
@@ -34,15 +35,16 @@ class GameState():
 
         posInFront = (pos[0] + dir, pos[1])
         posLeftDiag = (posInFront[0], posInFront[1] - 1)
-        leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
         posRightDiag = (posInFront[0], posInFront[1] + 1)
-        rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
+
 
         if (posLeftDiag[0] >= 0 and posLeftDiag[0] <= 7) and (posLeftDiag[1] >= 0 and posLeftDiag[1] <= 7):
+            leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
             if self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece) :
                 moves.append(posLeftDiag)
 
         if (posRightDiag[0] >= 0 and posRightDiag[0] <= 7) and (posRightDiag[1] >= 0 and posRightDiag[1] <= 7):
+            rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
             if self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece) :
                 moves.append(posRightDiag)
 
@@ -121,6 +123,11 @@ class GameState():
                                     moves.append((i,j))
                     return moves
 
+                case _ if piece == '--':
+                    return moves
+
+
+
                 case _ if 'B' in piece:
                     team = piece[0]
                     self.traceSpots(start, 1, 1, team, moves)
@@ -152,6 +159,45 @@ class GameState():
                                         moves.append((i,j))
                     return moves
 
+
+    def validMoves(self, start, moves, piece):
+        #for all possible moves, if move causes self check pass, otherwise mark it down
+        validMoves = []
+        preMoveBoard = copy.deepcopy(self.board)
+        whiteToMove = self.whiteToMove
+
+        for i in moves:
+            move = Move(start,i,self.board)
+            self.makeMove(move)
+            if self.checkCheck(piece[0]) is False:
+                validMoves.append(i)
+            self.board = copy.deepcopy(preMoveBoard)
+
+        self.whiteToMove = whiteToMove
+        self.board = preMoveBoard
+        return validMoves
+
+
+    def getValidMoves(self, start):
+        allMoves = self.getAllMoves(start)
+        validMoves = self.validMoves(start,allMoves, self.board[start[0]][start[1]])
+        return validMoves
+
+    def checkCheck(self, team):
+        allEnemyMoves = []
+        teamKing = ()
+        for i in range(8):
+            for j in range (8):
+                piece = self.board[i][j]
+                if piece == (team + 'K'):
+                    teamKing = (i,j)
+                if piece[0] != team:
+                    allEnemyMoves += self.getAllMoves((i,j))
+        if teamKing in allEnemyMoves:
+                return True
+        return False
+
+
     def checkIfOccupied(self, newSquare):
         newSquarePiece = self.board[newSquare[0]][newSquare[1]]
         if newSquarePiece != "--":
@@ -164,6 +210,9 @@ class GameState():
             return True
         else:
             return False
+
+
+
 
 class Move():
     ranksToRows = {"1": 7, "2": 6, "3": 5, "4": 4,

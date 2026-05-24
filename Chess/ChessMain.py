@@ -64,8 +64,10 @@ def main():
                                     sqSelect = ()
                                     playerClicks = []
                                 else:
-                                    playableSquares = gs.getAllMoves(playerClicks[0])
+                                    playableSquares = gs.getValidMoves(playerClicks[0])
                                     print(playableSquares)
+                                    print(gs.getValidMoves(playerClicks[0]))
+                                    print(gs.checkCheck(piece[0]))
 
                         if len(playerClicks) == 2:
                             if playerClicks[1] in playableSquares:
