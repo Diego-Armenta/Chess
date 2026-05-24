@@ -39,19 +39,29 @@ def main():
                 running = False
             elif e.type == p.MOUSEBUTTONDOWN:
                     mouse_pos = p.mouse.get_pos()
-                    #Find  x and y coords of square that was clicked on then transform them into their correspoding indicies on the board matrix
+
+                    #Find  x and y coords of square that was clicked on then transform them into their corresponding indicies on the board matrix
                     col = mouse_pos[0]//SQUARE_SIZE
                     row = mouse_pos[1]//SQUARE_SIZE
                     loop = True
                     skip = False
                     while(loop is True):
                         loop = False
-                        if sqSelect == (row, col) and skip is False: #undo function
+                        if sqSelect == (row, col) and skip is False: #undo function if user clicks back on starting square
                             sqSelect = ()
                             playerClicks = []
                             skip = False
 
-
+                        """
+                        In the else it takes users selection, and if it is the source square and not end square, it does 
+                        a validity check that it is not
+                        a blank square
+                        a white piece on blacks turn
+                        a black piece on whites turn
+                        or else it will flush the select and clicks
+                        
+                        if it is the source square and valid, program will retrieve the valid moves from that piece
+                        """
                         else:
                             sqSelect = (row, col)
                             playerClicks.append(sqSelect)
@@ -66,8 +76,7 @@ def main():
                                 else:
                                     playableSquares = gs.getValidMoves(playerClicks[0])
                                     print(playableSquares)
-                                    print(gs.getValidMoves(playerClicks[0]))
-                                    print(gs.checkCheck(piece[0]))
+                                    print("checkMate?: ", gs.checkCheckmate(playerClicks[0], (gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]])[0]))
 
                         if len(playerClicks) == 2:
                             if playerClicks[1] in playableSquares:

@@ -1,4 +1,5 @@
 import copy
+
 class GameState():
     def __init__(self):
         self.board=[
@@ -20,78 +21,9 @@ class GameState():
         self.moveLog.append(move)
         self.whiteToMove = not self.whiteToMove
 
-    def traceSpots(self, pos, rowChange, colChange, team, moves):
-        pos = (pos[0] + rowChange, pos[1] + colChange)
-        if (pos[0] >= 0 and pos[0] <= 7) and (pos[1] >= 0 and pos[1] <= 7):
-            if team in self.board[pos[0]][pos[1]]:
-                return
-
-            moves.append((pos[0], pos[1]))
-
-            if self.board[pos[0]][pos[1]] == "--":
-                self.traceSpots(pos, rowChange, colChange, team, moves)
-
-    def pawnMoves(self, pos, dir, moves, piece):
-
-        posInFront = (pos[0] + dir, pos[1])
-        posLeftDiag = (posInFront[0], posInFront[1] - 1)
-        posRightDiag = (posInFront[0], posInFront[1] + 1)
-
-
-        if (posLeftDiag[0] >= 0 and posLeftDiag[0] <= 7) and (posLeftDiag[1] >= 0 and posLeftDiag[1] <= 7):
-            leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
-            if self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece) :
-                moves.append(posLeftDiag)
-
-        if (posRightDiag[0] >= 0 and posRightDiag[0] <= 7) and (posRightDiag[1] >= 0 and posRightDiag[1] <= 7):
-            rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
-            if self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece) :
-                moves.append(posRightDiag)
-
-
-        if (posInFront[0] >= 0 and posInFront[0] <= 7) and (posInFront[1] >= 0 and posInFront[1] <= 7):
-            if self.checkIfOccupied(posInFront) is True:
-                return
-
-            moves.append(posInFront)
-
-            doubleJump = (posInFront[0] + dir, posInFront[1])
-            if self.hasBeenMoved(pos,'P') is False:
-                if self.checkIfOccupied(doubleJump) is False:
-                    moves.append(doubleJump)
-            return
-
-
-
-
-    def hasBeenMoved(self, pos, piece):
-        """
-        Checks if piece has been moved but needs different implementation for pawns, vs Kings and Rooks, as they can return to their OG square
-        """
-        if 'P' in piece:
-            startBoard = board=[
-                ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
-                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["--", "--", "--", "--", "--", "--", "--", "--"],
-                ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
-                ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
-            ]
-            if startBoard[pos[0]][pos[1]] == self.board[pos[0]][pos[1]]:
-                return False
-            else:
-                return True
-
-
-
-
-
-
-
-
-
+    """
+    get all possible moves for each piece calling their respective methods.
+    """
     def getAllMoves(self, start):
         piece = self.board[start[0]][start[1]]
         moves = []
@@ -104,59 +36,27 @@ class GameState():
                     self.pawnMoves(start, 1, moves, 'bP')
                     return moves
 
-                case _ if 'R' in piece:
-                    team = piece[0]
-                    self.traceSpots(start, 0, 1, team, moves)
-                    self.traceSpots(start, 1, 0, team, moves)
-                    self.traceSpots(start, 0, -1, team, moves)
-                    self.traceSpots(start, -1, 0, team, moves)
-                    return moves
-
                 case _ if 'N' in piece:
-                    for i in range(8):
-                        for j in range(8):
-                            differenceX = start[0] - i
-                            differenceY = start[1] - j
-                            if (abs(differenceX) == 2 and abs(differenceY) == 1 or
-                                abs(differenceX) == 1 and abs(differenceY) == 2):
-                                if self.checkIfOccupied((i,j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
-                                    moves.append((i,j))
+                    self.knightMoves(start, moves, piece)
                     return moves
-
-                case _ if piece == '--':
-                    return moves
-
-
 
                 case _ if 'B' in piece:
-                    team = piece[0]
-                    self.traceSpots(start, 1, 1, team, moves)
-                    self.traceSpots(start, 1, -1, team, moves)
-                    self.traceSpots(start, -1, 1, team, moves)
-                    self.traceSpots(start, -1, -1, team, moves)
+                    self.bishopMoves(start, moves, piece)
+                    return moves
+
+                case _ if 'R' in piece:
+                    self.rookMoves(start, moves, piece)
                     return moves
 
                 case _ if 'Q' in piece:
-                    team = piece[0]
-                    self.traceSpots(start, 0, 1, team, moves)
-                    self.traceSpots(start, 1, 0, team, moves)
-                    self.traceSpots(start, 0, -1, team, moves)
-                    self.traceSpots(start, -1, 0, team, moves)
-                    self.traceSpots(start, 1, 1, team, moves)
-                    self.traceSpots(start, 1, -1, team, moves)
-                    self.traceSpots(start, -1, 1, team, moves)
-                    self.traceSpots(start, -1, -1, team, moves)
+                    self.queenMoves(start, moves, piece)
                     return moves
 
                 case _ if 'K' in piece:
-                    for i in range(8):
-                        for j in range(8):
-                            differenceX = start[0] - i
-                            differenceY = start[1] - j
-                            if abs(differenceX) <= 1 and abs(differenceY) <= 1:
-                                if differenceX !=0 or differenceY != 0:
-                                    if self.checkIfOccupied((i, j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
-                                        moves.append((i,j))
+                    self.kingMoves(start, moves, piece)
+                    return moves
+
+                case _ if piece == '--':
                     return moves
 
 
@@ -196,6 +96,126 @@ class GameState():
         if teamKing in allEnemyMoves:
                 return True
         return False
+
+    def checkCheckmate(self, start,team):
+        allValidMoves = []
+        for i in range(8):
+            for j in range(8):
+                piece = self.board[i][j]
+                if piece[0] == team:
+                    allValidMoves += self.getValidMoves((i, j))
+
+        if not allValidMoves:
+            return True
+        else:
+            return False
+
+    def pawnMoves(self, pos, dir, moves, piece):
+
+        posInFront = (pos[0] + dir, pos[1])
+        posLeftDiag = (posInFront[0], posInFront[1] - 1)
+        posRightDiag = (posInFront[0], posInFront[1] + 1)
+
+
+        if (posLeftDiag[0] >= 0 and posLeftDiag[0] <= 7) and (posLeftDiag[1] >= 0 and posLeftDiag[1] <= 7):
+            leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
+            if self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece) :
+                moves.append(posLeftDiag)
+
+        if (posRightDiag[0] >= 0 and posRightDiag[0] <= 7) and (posRightDiag[1] >= 0 and posRightDiag[1] <= 7):
+            rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
+            if self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece) :
+                moves.append(posRightDiag)
+
+
+        if (posInFront[0] >= 0 and posInFront[0] <= 7) and (posInFront[1] >= 0 and posInFront[1] <= 7):
+            if self.checkIfOccupied(posInFront) is True:
+                return
+
+            moves.append(posInFront)
+
+            doubleJump = (posInFront[0] + dir, posInFront[1])
+            if self.hasBeenMoved(pos,'P') is False:
+                if self.checkIfOccupied(doubleJump) is False:
+                    moves.append(doubleJump)
+            return
+
+    def knightMoves(self, start, moves, piece):
+        for i in range(8):
+            for j in range(8):
+                differenceX = start[0] - i
+                differenceY = start[1] - j
+                if (abs(differenceX) == 2 and abs(differenceY) == 1 or
+                        abs(differenceX) == 1 and abs(differenceY) == 2):
+                    if self.checkIfOccupied((i, j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
+                        moves.append((i, j))
+        return
+
+    def bishopMoves(self, start, moves, piece):
+        team = piece[0]
+        self.traceSpots(start, 1, 1, team, moves)
+        self.traceSpots(start, 1, -1, team, moves)
+        self.traceSpots(start, -1, 1, team, moves)
+        self.traceSpots(start, -1, -1, team, moves)
+        return
+
+    def rookMoves(self, start, moves, piece):
+        team = piece[0]
+        self.traceSpots(start, 1, 0, team, moves)
+        self.traceSpots(start, 0, 1, team, moves)
+        self.traceSpots(start, -1, 0, team, moves)
+        self.traceSpots(start, 0, -1, team, moves)
+        return
+
+    def queenMoves(self, start, moves, piece):
+        self.rookMoves(start, moves, piece)
+        self.bishopMoves(start, moves, piece)
+        return
+
+    def kingMoves(self, start, moves, piece):
+        for i in range(8):
+            for j in range(8):
+                differenceX = start[0] - i
+                differenceY = start[1] - j
+                if abs(differenceX) <= 1 and abs(differenceY) <= 1:
+                    if differenceX != 0 or differenceY != 0:
+                        if self.checkIfOccupied((i, j)) is False or self.checkIfEnemy(piece, self.board[i][j]) is True:
+                            moves.append((i, j))
+        return
+
+
+
+
+    def traceSpots(self, pos, rowChange, colChange, team, moves):
+        pos = (pos[0] + rowChange, pos[1] + colChange)
+        if (pos[0] >= 0 and pos[0] <= 7) and (pos[1] >= 0 and pos[1] <= 7):
+            if team in self.board[pos[0]][pos[1]]:
+                return
+
+            moves.append((pos[0], pos[1]))
+
+            if self.board[pos[0]][pos[1]] == "--":
+                self.traceSpots(pos, rowChange, colChange, team, moves)
+
+    def hasBeenMoved(self, pos, piece):
+        """
+        Checks if piece has been moved but needs different implementation for pawns, vs Kings and Rooks, as they can return to their OG square
+        """
+        if 'P' in piece:
+            startBoard = board=[
+                ["bR", "bN", "bB", "bQ", "bK", "bB", "bN", "bR"],
+                ["bP", "bP", "bP", "bP", "bP", "bP", "bP", "bP"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["--", "--", "--", "--", "--", "--", "--", "--"],
+                ["wP", "wP", "wP", "wP", "wP", "wP", "wP", "wP"],
+                ["wR", "wN", "wB", "wQ", "wK", "wB", "wN", "wR"]
+            ]
+            if startBoard[pos[0]][pos[1]] == self.board[pos[0]][pos[1]]:
+                return False
+            else:
+                return True
 
 
     def checkIfOccupied(self, newSquare):
