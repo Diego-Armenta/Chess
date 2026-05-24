@@ -52,7 +52,7 @@ def main():
                             playerClicks = []
                             skip = False
 
-                        """
+                            """
                         In the else it takes users selection, and if it is the source square and not end square, it does 
                         a validity check that it is not
                         a blank square
@@ -62,6 +62,7 @@ def main():
                         
                         if it is the source square and valid, program will retrieve the valid moves from that piece
                         """
+
                         else:
                             sqSelect = (row, col)
                             playerClicks.append(sqSelect)
@@ -75,16 +76,22 @@ def main():
                                     playerClicks = []
                                 else:
                                     playableSquares = gs.getValidMoves(playerClicks[0])
-                                    print(playableSquares)
-                                    print("checkMate?: ", gs.checkCheckmate(playerClicks[0], (gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]])[0]))
 
                         if len(playerClicks) == 2:
                             if playerClicks[1] in playableSquares:
                                 move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
-                                print(move.getChessNotation())
                                 gs.makeMove(move)
+                                print(move.getChessNotation(gs))
                                 sqSelect = ()
                                 playerClicks = []
+                            elif (
+                                    (gs.board[(playerClicks[1])[0]][(playerClicks[1])[1]])
+                                == "--"
+                            ):
+                                sqSelect = playerClicks[0]
+                                playerClicks = []
+                                playerClicks.append(sqSelect)
+
                             elif (
                                     (gs.board[(playerClicks[1])[0]][(playerClicks[1])[1]])[0]
                                 == (gs.board[(playerClicks[0])[0]][(playerClicks[0])[1]])[0]

@@ -97,7 +97,7 @@ class GameState():
                 return True
         return False
 
-    def checkCheckmate(self, start,team):
+    def checkCheckmate(self,team):
         allValidMoves = []
         for i in range(8):
             for j in range(8):
@@ -265,8 +265,27 @@ class Move():
             self.pieceMoved = board[self.startRow][self.startCol]
             self.pieceCaptured = board[self.endRow][self.endCol]
 
-    def getChessNotation(self):
-            return f"{self.piecesToNames[self.pieceMoved]}{self.getRankFile(self.endRow, self.endCol)}"
+    def getChessNotation(self, currBoard):
+            #if piece captured is not "--" then it needs an x to denote capture of opposing piece
+            moveNotation = f"{self.piecesToNames[self.pieceMoved]}"
+            if self.pieceCaptured != "--":
+                moveNotation += ("x")
+            moveNotation += f"{self.getRankFile(self.endRow, self.endCol)}"
+
+            #decides which team to check checkmate and check for
+
+            if self.pieceMoved[0] == "w":
+                oppTeam = "b"
+            else:
+                oppTeam = "w"
+
+
+            if currBoard.checkCheckmate(oppTeam):
+                moveNotation += "#"
+            elif currBoard.checkCheck(oppTeam):
+                moveNotation += "+"
+
+            return moveNotation
 
     def getRankFile(self, r, c):
             return self.colsToFiles[c] + self.rowsToRanks[r]
