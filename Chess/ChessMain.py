@@ -18,7 +18,7 @@ Initialize global dictionary of images
 
 def loadImages():
     pieces = ['wR', 'wN', 'wB', 'wQ', 'wK', 'wP', 'bP', 'bR', 'bN', 'bB', 'bQ', 'bK', 'bP']
-    DOT[1] = p.transform.scale(p.image.load("images/dot.png"), (SQUARE_SIZE, SQUARE_SIZE)) #load in dot
+    DOT[0] = p.transform.scale(p.image.load("images/dot.png"), (SQUARE_SIZE, SQUARE_SIZE)) #load in dot
     for(piece) in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("images/" + piece +".png"), (SQUARE_SIZE, SQUARE_SIZE))
     #We can access images by IMAGES['wp']
@@ -76,6 +76,8 @@ def main():
                                     playerClicks = []
                                 else:
                                     playableSquares = gs.getValidMoves(playerClicks[0])
+                                    p.draw.rect(screen, "red",
+                                                p.Rect(row * SQUARE_SIZE, col * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 2)
 
                         if len(playerClicks) == 2:
                             if playerClicks[1] in playableSquares:
@@ -109,6 +111,15 @@ def main():
 
 
         drawGameState(screen, gs)
+        if len(playerClicks) == 1:
+                p.draw.rect(screen, "red", p.Rect(sqSelect[1] * SQUARE_SIZE, sqSelect[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 2)
+                for i in playableSquares:
+                    if(gs.board[i[0]][i[1]]) != "--":
+                        (DOT[0]).set_alpha(30)
+                    else:
+                        (DOT[0]).set_alpha(60)
+                    screen.blit(DOT[0], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+                    screen.blit(DOT[0], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
         clock.tick(MAX_FPS)
         p.display.flip()
 
@@ -122,7 +133,7 @@ Responsible for populating graphics of the board
 def drawGameState(screen, gs):
     drawBoard(screen)
     drawPieces(screen, gs.board)
-    #  drawViableMoves(screen, moves)
+
 
 
 
@@ -146,6 +157,7 @@ def drawPieces(screen, board):
             piece = board[i][j]
             if piece != "--":
                 screen.blit(IMAGES[piece],p.Rect(j*SQUARE_SIZE, i*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+
 
 def drawViableMoves(screen, moves):
     for i in moves:
