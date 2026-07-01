@@ -14,11 +14,29 @@ class GameState():
         ]
         self.whiteToMove = True
         self.moveLog = []
+        self.enPassantable = []
 
     def makeMove(self, move):
+        emptySquare = False
+        if self.board[move.endRow][move.endCol] == "--":
+            emptySquare = True
         self.board[move.startRow][move.startCol] = "--"
         self.board[move.endRow][move.endCol] = move.pieceMoved
         self.moveLog.append(move)
+
+        if move.endRow != move.startRow and emptySquare:
+            if move.endRow == 2:
+                self.board[(move.endRow + 1)][move.endCol] = "--"
+            else:
+                self.board[(move.endRow - 1)][move.endCol] = "--"
+
+        # Set new en passant target ONLY if this move was a double pawn push
+        if move.pieceMoved[1] == 'P' and abs(move.endRow - move.startRow) == 2:
+            midRow = (move.startRow + move.endRow) // 2
+            self.enPassantable = [(midRow, move.startCol)]
+        else:
+            self.enPassantable = []
+
         self.whiteToMove = not self.whiteToMove
 
     """
@@ -64,6 +82,7 @@ class GameState():
         #for all possible moves, if move causes self check pass, otherwise mark it down
         validMoves = []
         preMoveBoard = copy.deepcopy(self.board)
+        preMoveEP = self.enPassantable
         whiteToMove = self.whiteToMove
 
         for i in moves:
@@ -75,6 +94,7 @@ class GameState():
 
         self.whiteToMove = whiteToMove
         self.board = preMoveBoard
+        self.enPassantable = preMoveEP
         return validMoves
 
 
@@ -86,6 +106,7 @@ class GameState():
     def checkCheck(self, team):
         allEnemyMoves = []
         teamKing = ()
+        preMoveEP = self.enPassantable.copy()
         for i in range(8):
             for j in range (8):
                 piece = self.board[i][j]
@@ -93,18 +114,20 @@ class GameState():
                     teamKing = (i,j)
                 if piece[0] != team:
                     allEnemyMoves += self.getAllMoves((i,j))
+        self.enPassantable = preMoveEP
         if teamKing in allEnemyMoves:
                 return True
         return False
 
     def checkCheckmate(self,team):
         allValidMoves = []
+        preMoveEP = self.enPassantable.copy()
         for i in range(8):
             for j in range(8):
                 piece = self.board[i][j]
                 if piece[0] == team:
                     allValidMoves += self.getValidMoves((i, j))
-
+        self.enPassantable = preMoveEP
         if not allValidMoves:
             return True
         else:
@@ -119,13 +142,14 @@ class GameState():
 
         if (posLeftDiag[0] >= 0 and posLeftDiag[0] <= 7) and (posLeftDiag[1] >= 0 and posLeftDiag[1] <= 7):
             leftDiagPiece = self.board[posLeftDiag[0]][posLeftDiag[1]]
-            if self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece) :
+            if (self.checkIfOccupied(posLeftDiag) is True and self.checkIfEnemy(piece, leftDiagPiece)) or posLeftDiag in self.enPassantable:
                 moves.append(posLeftDiag)
 
         if (posRightDiag[0] >= 0 and posRightDiag[0] <= 7) and (posRightDiag[1] >= 0 and posRightDiag[1] <= 7):
             rightDiagPiece = self.board[posRightDiag[0]][posRightDiag[1]]
-            if self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece) :
+            if (self.checkIfOccupied(posRightDiag) is True and self.checkIfEnemy(piece, rightDiagPiece)) or posRightDiag in self.enPassantable:
                 moves.append(posRightDiag)
+
 
 
         if (posInFront[0] >= 0 and posInFront[0] <= 7) and (posInFront[1] >= 0 and posInFront[1] <= 7):
@@ -230,6 +254,12 @@ class GameState():
             return True
         else:
             return False
+
+    def markEnPassantable(self, pos):
+        self.enPassantable = [pos]
+        return
+
+    #def isEnpassantable(self, pos):
 
 
 

@@ -33,6 +33,7 @@ def main():
     running = True
     sqSelect = ()
     playerClicks = []
+    playableSquares = []
     while(running):
         for(e) in p.event.get():
             if e.type == p.QUIT:
@@ -105,21 +106,13 @@ def main():
                                 loop = True
                                 skip = True
                                 playerClicks = []
+                            print(gs.enPassantable)
 
 
 
 
 
-        drawGameState(screen, gs)
-        if len(playerClicks) == 1:
-                p.draw.rect(screen, "red", p.Rect(sqSelect[1] * SQUARE_SIZE, sqSelect[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE), 2)
-                for i in playableSquares:
-                    if(gs.board[i[0]][i[1]]) != "--":
-                        (DOT[0]).set_alpha(30)
-                    else:
-                        (DOT[0]).set_alpha(60)
-                    screen.blit(DOT[0], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
-                    screen.blit(DOT[0], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+        drawGameState(screen, gs, playerClicks, playableSquares)
         clock.tick(MAX_FPS)
         p.display.flip()
 
@@ -130,9 +123,12 @@ def main():
 Responsible for populating graphics of the board
 '''
 
-def drawGameState(screen, gs):
+def drawGameState(screen, gs, playerClicks, playableSquares):
     drawBoard(screen)
     drawPieces(screen, gs.board)
+    if len(playerClicks) == 1:
+        drawViableMoves(screen, playableSquares, gs.board)
+
 
 
 
@@ -159,9 +155,16 @@ def drawPieces(screen, board):
                 screen.blit(IMAGES[piece],p.Rect(j*SQUARE_SIZE, i*SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 
-def drawViableMoves(screen, moves):
-    for i in moves:
-        screen.blit(DOT[1], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
+def drawViableMoves(screen, playableSquares, board):
+    for i in playableSquares:
+        if (board[i[0]][i[1]]) != "--":
+            (DOT[0]).set_alpha(30)
+            p.draw.circle(screen, (80, 80, 80),
+                          ((i[1] * SQUARE_SIZE + SQUARE_SIZE / 2), (i[0] * SQUARE_SIZE) + SQUARE_SIZE / 2),
+                          SQUARE_SIZE / 2, 4)
+        else:
+            (DOT[0]).set_alpha(60)
+            screen.blit(DOT[0], p.Rect(i[1] * SQUARE_SIZE, i[0] * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE))
 
 
 
